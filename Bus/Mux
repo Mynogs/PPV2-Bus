@@ -1,0 +1,63 @@
+-- V1.0a AR
+-- 30.12.2016 10:06:36 AR V1.0b
+-- 21.06.2017 18:07:21 AR V1.0c
+
+block.setSize(6, 51)
+
+generic = {
+  parameter = {
+    inputs = 2
+  },
+
+  init = function(self)
+    block.setInputsPinCount(self.parameter.inputs)
+    for i = 1, self.parameter.inputs do
+      block.setInputPinTypeRestrains(i, 'any')
+    end
+    block.setOutputsPinCount(1)
+    block.setOutputPinTypeRestrains(1, 'table')
+    block.modifyFlags('SupressStartFunctionCall', true)
+    block.modifyFlags('SupressStopFunctionCall', true)
+  end,
+
+  open = function(self)
+    gui.add('Info', 'Info', 'Mux', 'Multiplex scalar or vector signals')
+    gui.add('Edit', 'EditNumberOfInputs', 'Number of inputs')
+    gui.set('EditNumberOfInputs', 'Integer', self.parameter.inputs)
+    gui.setSize()
+  end,
+
+  apply = function(self)
+    self.parameter.inputs = math.max(gui.get('EditNumberOfInputs', 'Integer'), 1)
+    block.setInputsPinCount(self.parameter.inputs)
+    for i = 1, self.parameter.inputs do
+      block.setInputPinTypeRestrains(i, 'any')
+    end
+  end,
+
+  close = function()
+  end,
+
+  avatar = function(self)
+    return block.getDefaultAvatar(0x54)
+  end,
+
+  generate = function(self)
+    local source =
+      [==[
+        return {
+
+          step = function(A)
+            return {A}
+          end
+
+        }
+      ]==]
+    local replaces = {
+      ['A'] = table.concat(block.getInputsPinNames(), ', '),
+    }
+    return string.gsub(source, '%a+', replaces)
+  end,
+
+}
+

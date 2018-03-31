@@ -1,0 +1,67 @@
+-- V1.0a AR
+-- 30.12.2016 10:04:29 AR V1.0b
+-- 21.06.2017 18:06:39 AR V1.0c
+
+block.setSize(6, 51)
+
+generic = {
+  parameter = {
+    outputs = 2
+  },
+
+  init = function(self)
+    block.setInputsPinCount(1)
+    block.setInputPinTypeRestrains(1, 'table')
+    block.setOutputsPinCount(self.parameter.outputs)
+    for i = 1, self.parameter.outputs do
+      block.setOutputPinTypeRestrains(i, 'any')
+    end
+    block.modifyFlags('SupressStartFunctionCall', true)
+    block.modifyFlags('SupressStopFunctionCall', true)
+  end,
+
+  open = function(self)
+    gui.add('Info', 'Info', 'Demux', 'Split vector signals into scalars or smaller vectors')
+    gui.add('Edit', 'EditNumberOfOutputs', 'Number of outputs')
+    gui.set('EditNumberOfOutputs', 'Integer', self.parameter.outputs)
+    gui.setSize()
+  end,
+
+  apply = function(self)
+    self.parameter.outputs = math.max(gui.get('EditNumberOfOutputs', 'Integer'), 1)
+    block.setOutputsPinCount(self.parameter.outputs)
+    for i = 1, self.parameter.outputs do
+      block.setOutputPinTypeRestrains(i, 'any')
+    end
+  end,
+
+  close = function()
+  end,
+
+  avatar = function(self)
+    return block.getDefaultAvatar(0x54)
+  end,
+
+  generate = function(self)
+    local source =
+      [==[
+        return {
+
+          step = function(a)
+            return Q
+          end
+
+        }
+      ]==]
+    local q = {}
+    for i = 1, self.parameter.outputs do
+      q[i] = 'a[' .. i .. ']'
+    end
+    local replaces = {
+      ['Q'] = table.concat(q, ', ')
+    }
+    return string.gsub(source, '%a+', replaces)
+  end,
+
+}
+
