@@ -1,0 +1,74 @@
+-- 06.03.2019 09:47:44 AR V1.0a
+
+block.setSize(26, 51)
+
+generic = {
+  parameter = {
+    names = 'a\nb\n',
+  },
+
+  refreshPins = function(self)
+    local outputs = 0
+    for name in self.parameter.names:gmatch("[^%c]+") do
+      outputs = outputs + 1
+    end
+    block.setOutputsPinCount(outputs)
+    local i = 1
+    for name in self.parameter.names:gmatch("[^%c]+") do
+      block.setOutputPinTypeRestrains(i, 'any')
+      block.setOutputPinName(i, name)
+      i = i + 1
+    end
+  end,
+
+  init = function(self)
+    block.setInputsPinCount(1)
+    block.setInputPinTypeRestrains(1, 'table')
+    generic.refreshPins(self)
+    block.modifyFlags('SupressStartFunctionCall', true)
+    block.modifyFlags('SupressStopFunctionCall', true)
+  end,
+
+  open = function(self)
+    gui.add('Info', 'Info', 'Demux', 'Split struct signals into scalars or smaller vectors by name')
+    gui.add('Memo', 'MemoNames', 'Names', {Width = 300, Height = 200, RemoveEmptyLines = true})
+    gui.set('MemoNames', 'Text', self.parameter.names)
+    gui.setSize()
+  end,
+
+  apply = function(self)
+    self.parameter.names = gui.get('MemoNames', 'Text')
+   generic.refreshPins(self)
+  end,
+
+  close = function()
+  end,
+
+  avatar = function(self)
+    return block.getDefaultAvatar(0x10)
+  end,
+
+  generate = function(self)
+    local source =
+      [==[
+        return {
+
+          step = function(a)
+            return Q
+          end
+
+        }
+      ]==]
+    local q = {}
+
+    for name in self.parameter.names:gmatch("[^%c]+") do
+      q[#q + 1] = 'a.' .. name
+    end
+    local replaces = {
+      ['Q'] = table.concat(q, ', ')
+    }
+    return string.gsub(source, '%a+', replaces)
+  end,
+
+}
+
